@@ -5,14 +5,19 @@
 #include <hostfxr.h>
 #include <coreclr_delegates.h>
 
-#define NON_ZERO_ERR(fn, ...)                               \
+#define NON_ZERO_ERR(fn)                                    \
   if (int32_t status = fn; status)                          \
   {                                                         \
     return absl::InternalError("Error while calling " #fn); \
   }
 
-absl::StatusOr<Host> Host::initialize(const Loader &b, const CmdLineInit &args)
+#define INIT_HDT_HANDLE(fn_name) \
+  ASSIGN_OR_RETURN(host.fn_name, host.get_runtime_delegate<fn_name##_fn>(hdt_##fn_name));
+
+absl::StatusOr<Host> Host::init(const CmdLineInit &args)
 {
+  ASSIGN_OR_RETURN(Loader b, Loader::init());
+
   std::vector<const char_t *> a;
   a.resize(args.args.size());
   for (auto arg : args.args)
@@ -23,15 +28,23 @@ absl::StatusOr<Host> Host::initialize(const Loader &b, const CmdLineInit &args)
   hostfxr_handle hndl;
   NON_ZERO_ERR(b.initialize_for_dotnet_command_line(a.size(), a.data(), nullptr, &hndl));
 
-  return Host(hndl, b);
+  Host host(hndl, std::move(b));
+  FOR_HDT_HANDLES(INIT_HDT_HANDLE, ;);
+
+  return host;
 }
 
-absl::StatusOr<Host> Host::initialize(const Loader &b, const RuntimeCfgInit &args)
+absl::StatusOr<Host> Host::init(const RuntimeCfgInit &args)
 {
+  ASSIGN_OR_RETURN(Loader b, Loader::init());
+
   hostfxr_handle hndl;
   NON_ZERO_ERR(b.initialize_for_runtime_config(args.runtime_cfg_path.data(), nullptr, &hndl));
 
-  return Host(hndl, b);
+  Host host(hndl, std::move(b));
+  FOR_HDT_HANDLES(INIT_HDT_HANDLE, ;);
+
+  return host;
 }
 
 absl::StatusOr<std::wstring_view> Host::get_runtime_property_value(std::wstring_view name)
@@ -76,4 +89,40 @@ absl::Status Host::close()
 {
   NON_ZERO_ERR(b_.close(hndl_));
   return absl::OkStatus();
+}
+
+Host::Host(hostfxr_handle hndl, Loader b) : hndl_(hndl), b_(std::move(b))
+{
+}
+
+absl::StatusOr<void *> Host::get_runtime_delegate_internal(enum hostfxr_delegate_type type)
+{
+  void *handle;
+  NON_ZERO_ERR(b_.get_runtime_delegate(hndl_, type, &handle));
+  return handle;
+}
+
+absl::StatusOr<void *> Host::load_assembly_and_get_function_pointer_internal(
+    std::wstring_view assembly_path,
+    std::wstring_view type_name,
+    std::wstring_view method_name,
+    std::wstring_view delegate_type_name)
+{
+  void *ptr;
+  NON_ZERO_ERR(load_assembly_and_get_function_pointer(
+      assembly_path.data(), type_name.data(), method_name.data(), delegate_type_name.data(),
+      nullptr, &ptr));
+  return ptr;
+}
+
+absl::StatusOr<void *> Host::get_function_pointer_internal(
+    std::wstring_view type_name,
+    std::wstring_view method_name,
+    std::wstring_view delegate_type_name)
+{
+  void *ptr;
+  NON_ZERO_ERR(get_function_pointer(
+      type_name.data(), method_name.data(), delegate_type_name.data(),
+      nullptr, nullptr, &ptr));
+  return ptr;
 }

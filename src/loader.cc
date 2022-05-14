@@ -23,7 +23,7 @@ absl::StatusOr<const Loader> Loader::init()
   NON_ZERO_ERR(get_hostfxr_path(buffer, &len, nullptr));
   HINSTANCE dll = LoadLibraryW(buffer);
   Loader host(dll);
-  FOR_HANDLES(CHECK_HANDLE, ;);
+  FOR_HOSTFXR_HANDLES(CHECK_HANDLE, ;);
   return host;
 }
 
@@ -31,6 +31,6 @@ absl::StatusOr<const Loader> Loader::init()
   fn_name(reinterpret_cast<hostfxr_##fn_name##_fn>( \
       GetProcAddress(dll, "hostfxr_" #fn_name)))
 
-Loader::Loader(HINSTANCE dll) : FOR_HANDLES(CTOR_INIT, COMMA)
+Loader::Loader(HINSTANCE dll) : FOR_HOSTFXR_HANDLES(CTOR_INIT, COMMA)
 {
 }

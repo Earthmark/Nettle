@@ -6,7 +6,7 @@
 #include <Windows.h>
 #include <hostfxr.h>
 
-#define FOR_HANDLES(sub_macro, term)            \
+#define FOR_HOSTFXR_HANDLES(sub_macro, term)    \
   sub_macro(set_error_writer) term              \
   sub_macro(initialize_for_dotnet_command_line) \
   term                                          \
@@ -32,7 +32,7 @@ class Loader
 public:
   static absl::StatusOr<const Loader> init();
 
-  FOR_HANDLES(HOSTFXR_HANDLE, ;);
+  FOR_HOSTFXR_HANDLES(HOSTFXR_HANDLE, ;);
 
 private:
   Loader(HINSTANCE dll);
