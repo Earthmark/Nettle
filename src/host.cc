@@ -5,7 +5,13 @@
 #include <hostfxr.h>
 #include <coreclr_delegates.h>
 
-std::optional<Host> Host::initialize(const Bootstrapper &b, const CmdLineInit &args)
+#define NON_ZERO_ERR(fn, ...)                               \
+  if (int32_t status = fn; status)                          \
+  {                                                         \
+    return absl::InternalError("Error while calling " #fn); \
+  }
+
+absl::StatusOr<Host> Host::initialize(const Loader &b, const CmdLineInit &args)
 {
   std::vector<const char_t *> a;
   a.resize(args.args.size());
@@ -14,57 +20,41 @@ std::optional<Host> Host::initialize(const Bootstrapper &b, const CmdLineInit &a
     a.push_back(arg.data());
   }
 
-  hostfxr_handle handle;
-  if (!b.initialize_for_dotnet_command_line(a.size(), a.data(), nullptr, &handle))
-  {
-    return std::nullopt;
-  }
+  hostfxr_handle hndl;
+  NON_ZERO_ERR(b.initialize_for_dotnet_command_line(a.size(), a.data(), nullptr, &hndl));
 
-  return Host(handle, b);
+  return Host(hndl, b);
 }
 
-std::optional<Host> Host::initialize(const Bootstrapper &b, const RuntimeCfgInit &args)
+absl::StatusOr<Host> Host::initialize(const Loader &b, const RuntimeCfgInit &args)
 {
-  hostfxr_handle handle;
-  if (auto status = b.initialize_for_runtime_config(args.runtime_cfg_path.data(), nullptr, &handle); status)
-  {
-    std::cout << "Error loading host: " << status << std::endl;
-    return std::nullopt;
-  }
+  hostfxr_handle hndl;
+  NON_ZERO_ERR(b.initialize_for_runtime_config(args.runtime_cfg_path.data(), nullptr, &hndl));
 
-  return Host(handle, b);
+  return Host(hndl, b);
 }
 
-std::optional<std::wstring_view> Host::get_runtime_property_value(std::wstring_view name)
+absl::StatusOr<std::wstring_view> Host::get_runtime_property_value(std::wstring_view name)
 {
   const char_t *value;
-  if (!b_.get_runtime_property_value(hndl_, name.data(), &value))
-  {
-    return std::nullopt;
-  }
+  NON_ZERO_ERR(b_.get_runtime_property_value(hndl_, name.data(), &value));
   return value;
 }
 
-bool Host::set_runtime_property_value(std::wstring_view name, std::wstring_view value)
+absl::Status Host::set_runtime_property_value(std::wstring_view name, std::wstring_view value)
 {
-  return !b_.set_runtime_property_value(hndl_, name.data(), value.data());
+  NON_ZERO_ERR(b_.set_runtime_property_value(hndl_, name.data(), value.data()));
+  return absl::OkStatus();
 }
 
-std::vector<std::pair<std::wstring_view, std::wstring_view>> Host::get_runtime_properties()
+absl::StatusOr<std::vector<std::pair<std::wstring_view, std::wstring_view>>> Host::get_runtime_properties()
 {
   size_t count = 0;
-  auto status = b_.get_runtime_properties(hndl_, &count, nullptr, nullptr);
-
-  std::cout << "Properties available: " << count << std::endl;
+  b_.get_runtime_properties(hndl_, &count, nullptr, nullptr);
 
   std::vector<const char_t *> keys(count);
   std::vector<const char_t *> values(count);
-
-  status = b_.get_runtime_properties(hndl_, &count, keys.data(), values.data());
-  if (!status)
-  {
-    std::cout << "Failed to get runtime properties" << std::endl;
-  }
+  NON_ZERO_ERR(b_.get_runtime_properties(hndl_, &count, keys.data(), values.data()));
 
   std::vector<std::pair<std::wstring_view, std::wstring_view>> pairs;
   pairs.reserve(count);
@@ -76,15 +66,14 @@ std::vector<std::pair<std::wstring_view, std::wstring_view>> Host::get_runtime_p
   return pairs;
 }
 
-void Host::run()
+absl::Status Host::run()
 {
-  if (auto status = b_.run_app(hndl_); status)
-  {
-    std::cout << "Error starting " << status << std::endl;
-  }
+  NON_ZERO_ERR(b_.run_app(hndl_));
+  return absl::OkStatus();
 }
 
-void Host::close()
+absl::Status Host::close()
 {
-  b_.close(hndl_);
+  NON_ZERO_ERR(b_.close(hndl_));
+  return absl::OkStatus();
 }

@@ -1,8 +1,7 @@
 #ifndef BOOTSTRAPPER_H_
 #define BOOTSTRAPPER_H_
 
-#include <optional>
-#include <string_view>
+#include "absl/status/statusor.h"
 
 #include <Windows.h>
 #include <hostfxr.h>
@@ -28,15 +27,15 @@
 #define HOSTFXR_HANDLE(fn_name) \
   hostfxr_##fn_name##_fn fn_name
 
-class Bootstrapper
+class Loader
 {
 public:
-  static std::optional<const Bootstrapper> init();
+  static absl::StatusOr<const Loader> init();
 
   FOR_HANDLES(HOSTFXR_HANDLE, ;);
 
 private:
-  Bootstrapper(HINSTANCE dll);
+  Loader(HINSTANCE dll);
 };
 
 #endif

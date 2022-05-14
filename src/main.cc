@@ -1,37 +1,42 @@
+#include <iostream>
+
 #include <Windows.h>
 #include <hostfxr.h>
 #include <nethost.h>
 
-#include <iostream>
+#include "absl/status/statusor.h"
 
 #include "host.h"
-#include "bootstrapper.h"
+#include "loader.h"
+#include "status_macros.h"
 
-int main()
+absl::StatusOr<int> status_main()
 {
-  auto bs = Bootstrapper::init();
-  if (!bs)
-  {
-    std::cout << "Failed to load hostfxr" << std::endl;
-    return 1;
-  }
+  ASSIGN_OR_RETURN(const Loader loader, Loader::init());
+  RuntimeCfgInit init{
+      .runtime_cfg_path = L"C:\\Users\\earth\\source\\repos\\nettle\\managed\\bin\\Debug\\net6.0\\nettle.runtimeconfig.json",
+  };
+  ASSIGN_OR_RETURN(Host host, Host::initialize(loader, init));
 
-  RuntimeCfgInit init;
-  init.runtime_cfg_path = L"C:\\Users\\earth\\source\\repos\\nettle\\managed\\bin\\Debug\\net6.0\\nettle.runtimeconfig.json";
-  auto host = Host::initialize(*bs, init);
-  if (!host)
-  {
-    std::cout << "Failed to load host" << std::endl;
-    return 1;
-  }
-
-  std::wcout << L"Host props" << std::endl;
-  for (auto [k, v] : host->get_runtime_properties())
+  ASSIGN_OR_RETURN(auto props, host.get_runtime_properties());
+  for (auto [k, v] : props)
   {
     std::wcout << L"  " << k << L"=" << v << std::endl;
   }
 
-  host->run();
+  RETURN_IF_ERROR(host.run());
 
   return 0;
+}
+
+int main()
+{
+  if (auto status = status_main(); !status.ok())
+  {
+    std::cout << status.status() << std::endl;
+  }
+  else
+  {
+    return *status;
+  }
 }
