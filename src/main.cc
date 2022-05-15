@@ -11,12 +11,12 @@
 
 absl::StatusOr<int> status_main()
 {
-  CmdLineInit init{
+  CmdLineInit args{
       .args = {
-          L"C:\\Users\\earth\\source\\repos\\nettle\\managed\\bin\\Debug\\net6.0\\nettle.dll",
+          L"../../managed/bin/Debug/net6.0/nettle.dll",
       },
   };
-  ASSIGN_OR_RETURN(Host host, Host::init(init));
+  ASSIGN_OR_RETURN(Host host, Host::init(args));
 
   RETURN_IF_ERROR(host.run());
 
