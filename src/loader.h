@@ -1,10 +1,11 @@
 #ifndef BOOTSTRAPPER_H_
 #define BOOTSTRAPPER_H_
 
-#include "absl/status/statusor.h"
-
 #include <Windows.h>
-#include <hostfxr.h>
+
+#include "hostfxr.h"
+
+#include "absl/status/statusor.h"
 
 #define FOR_HOSTFXR_HANDLES(sub_macro, term)    \
   sub_macro(set_error_writer) term              \

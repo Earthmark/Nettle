@@ -1,8 +1,5 @@
 #include <iostream>
-
-#include <Windows.h>
-#include <hostfxr.h>
-#include <nethost.h>
+#include <string>
 
 #include "absl/status/statusor.h"
 
@@ -13,7 +10,7 @@ absl::StatusOr<int> status_main()
 {
   CmdLineInit args{
       .args = {
-          L"../../managed/bin/Debug/net6.0/nettle.dll",
+          L"C:\\Users\\earth\\source\\repos\\nettle\\managed\\bin\\Debug\\net6.0\\nettle.dll",
       },
   };
   ASSIGN_OR_RETURN(Host host, Host::init(args));
@@ -26,6 +23,7 @@ int main()
   if (auto status = status_main(); !status.ok())
   {
     std::cout << status.status() << std::endl;
+    return 1;
   }
   else
   {
