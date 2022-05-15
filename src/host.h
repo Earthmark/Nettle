@@ -12,7 +12,7 @@
 #include "coreclr_delegates.h"
 
 #include "loader.h"
-#include "status_macros.h"
+#include "status_utils.h"
 
 struct CmdLineInit
 {

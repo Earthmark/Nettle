@@ -4,6 +4,11 @@
 #include "absl/base/optimization.h"
 #include "absl/status/status.h"
 
+absl::Status InvalidArgOnNonZero(int32_t status_code, std::string_view message);
+
+#define STATUS_ERROR_NON_ZERO(fn) \
+  RETURN_IF_ERROR(InvalidArgOnNonZero(fn, "Error while calling " #fn))
+
 #define STATUS_MACROS_CONCAT_NAME(x, y) \
   STATUS_MACROS_CONCAT_IMPL(x, y)
 #define STATUS_MACROS_CONCAT_IMPL(x, y) x##y
@@ -32,14 +37,11 @@
   RETURN_IF_ERROR_IMPL(         \
       STATUS_MACROS_CONCAT_NAME(_local_status, __COUNTER__), status)
 
-#define RETURN_IF_NULL(ptr)                                              \
-  do                                                                     \
-  {                                                                      \
-    if (!(ptr))                                                          \
-    {                                                                    \
-      return absl::InvalidArgumentError(absl::StrCat(#ptr, " is null")); \
-    }                                                                    \
-  } while (false)
+#define RETURN_IF_NULL(ptr)                                            \
+  if (!(ptr))                                                          \
+  {                                                                    \
+    return absl::InvalidArgumentError(absl::StrCat(#ptr, " is null")); \
+  }
 
 // We need dependency on logging to import the core CHECK macros.
 #if !defined(CHECK_OK)

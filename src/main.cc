@@ -7,7 +7,7 @@
 #include "absl/status/statusor.h"
 
 #include "host.h"
-#include "status_macros.h"
+#include "status_utils.h"
 
 absl::StatusOr<int> status_main()
 {
@@ -17,9 +17,7 @@ absl::StatusOr<int> status_main()
       },
   };
   ASSIGN_OR_RETURN(Host host, Host::init(args));
-
   RETURN_IF_ERROR(host.run());
-
   return 0;
 }
 

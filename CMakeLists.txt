@@ -15,7 +15,7 @@ add_subdirectory(third_party/abseil-cpp)
 add_subdirectory(third_party/googletest)
 add_subdirectory(third_party/nethost)
 
-target_link_libraries(Nettle nethost absl::base absl::status absl::statusor)
+target_link_libraries(Nettle nethost absl::base absl::status absl::statusor absl::strings)
 
 add_custom_command(TARGET Nettle POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Nettle> $<TARGET_FILE_DIR:Nettle>
