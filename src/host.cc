@@ -19,7 +19,7 @@ absl::StatusOr<Host> Host::init(const CmdLineInit &args)
   ASSIGN_OR_RETURN(Loader b, Loader::init());
 
   std::vector<const char_t *> a;
-  a.resize(args.args.size());
+  a.reserve(args.args.size());
   for (auto arg : args.args)
   {
     a.push_back(arg.data());
@@ -65,8 +65,10 @@ absl::StatusOr<std::vector<std::pair<std::wstring_view, std::wstring_view>>> Hos
   size_t count = 0;
   b_.get_runtime_properties(hndl_, &count, nullptr, nullptr);
 
-  std::vector<const char_t *> keys(count);
-  std::vector<const char_t *> values(count);
+  std::vector<const char_t *> keys;
+  keys.resize(count);
+  std::vector<const char_t *> values;
+  values.resize(count);
   NON_ZERO_ERR(b_.get_runtime_properties(hndl_, &count, keys.data(), values.data()));
 
   std::vector<std::pair<std::wstring_view, std::wstring_view>> pairs;

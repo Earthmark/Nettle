@@ -11,16 +11,14 @@
 
 absl::StatusOr<int> status_main()
 {
-  RuntimeCfgInit init{
-      .runtime_cfg_path = L"C:\\Users\\earth\\source\\repos\\nettle\\managed\\bin\\Debug\\net6.0\\nettle.runtimeconfig.json",
+  CmdLineInit init{
+      .args = {
+          L"C:\\Users\\earth\\source\\repos\\nettle\\managed\\bin\\Debug\\net6.0\\nettle.dll",
+      },
   };
   ASSIGN_OR_RETURN(Host host, Host::init(init));
 
-  ASSIGN_OR_RETURN(auto props, host.get_runtime_properties());
-  for (auto [k, v] : props)
-  {
-    std::wcout << L"  " << k << L"=" << v << std::endl;
-  }
+  RETURN_IF_ERROR(host.run());
 
   return 0;
 }
