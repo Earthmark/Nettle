@@ -35,7 +35,7 @@ absl::StatusOr<Host> Host::init(const RuntimeCfgInit &args)
 }
 
 #define INIT_HDT_HANDLE(fn_name) \
-  ASSIGN_OR_RETURN(host.fn_name, host.get_runtime_delegate<fn_name##_fn>(hdt_##fn_name));
+  ASSIGN_OR_RETURN(host.fn_name##_, host.get_runtime_delegate<fn_name##_fn>(hdt_##fn_name));
 
 absl::StatusOr<Host> Host::init_internal(hostfxr_handle hndl, Loader b)
 {
@@ -112,7 +112,7 @@ absl::StatusOr<void *> Host::load_assembly_and_get_function_pointer_internal(
     const std::wstring &delegate_type_name)
 {
   void *ptr;
-  STATUS_ERROR_NON_ZERO(load_assembly_and_get_function_pointer(
+  STATUS_ERROR_NON_ZERO(load_assembly_and_get_function_pointer_(
       assembly_path.c_str(), type_name.c_str(), method_name.c_str(), delegate_type_name.c_str(),
       nullptr, &ptr));
   return ptr;
@@ -121,11 +121,13 @@ absl::StatusOr<void *> Host::load_assembly_and_get_function_pointer_internal(
 absl::StatusOr<void *> Host::get_function_pointer_internal(
     const std::wstring &type_name,
     const std::wstring &method_name,
-    const std::wstring &delegate_type_name)
+    const std::wstring *delegate_type_name)
 {
   void *ptr;
-  STATUS_ERROR_NON_ZERO(get_function_pointer(
-      type_name.c_str(), method_name.c_str(), delegate_type_name.c_str(),
+  STATUS_ERROR_NON_ZERO(get_function_pointer_(
+      type_name.c_str(),
+      method_name.c_str(),
+      delegate_type_name ? delegate_type_name->c_str() : UNMANAGEDCALLERSONLY_METHOD,
       nullptr, nullptr, &ptr));
   return ptr;
 }

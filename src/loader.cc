@@ -1,5 +1,7 @@
 #include "loader.h"
 
+#define NETHOST_USE_AS_STATIC
+
 #include "nethost.h"
 
 #include "status_utils.h"
